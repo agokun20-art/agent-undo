@@ -10,13 +10,14 @@ already have before the agent starts. Inspired by the request to
 Requires Node.js 18+ and Git 2.31+. Install directly from GitHub:
 
 ```sh
-npm install -g github:agokun20-art/undoturn
+npm install -g github:agokun20-art/agent-undo
 ```
 
 Or clone the repository, then pack and install:
 
 ```sh
-cd undoturn
+git clone https://github.com/agokun20-art/agent-undo.git
+cd agent-undo
 npm pack
 npm install -g ./undoturn-0.1.0.tgz
 ```
