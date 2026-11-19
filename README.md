@@ -7,14 +7,13 @@ already have before the agent starts. Inspired by the request to
 
 ## Install
 
-Requires Node.js 18+ and Git 2.31+. From the private GitHub repository, with Git
-access configured:
+Requires Node.js 18+ and Git 2.31+. Install directly from GitHub:
 
 ```sh
 npm install -g github:agokun20-art/agent-undo
 ```
 
-Or clone it with your authorized Git URL, then pack and install:
+Or clone the repository, then pack and install:
 
 ```sh
 cd agent-undo
