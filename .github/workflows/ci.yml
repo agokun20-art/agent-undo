@@ -43,5 +43,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.node == 22
         shell: bash
         run: |
-          npm install -g --prefix "$RUNNER_TEMP/agent-undo-git" "git+file://$GITHUB_WORKSPACE#$(git rev-parse HEAD)"
+          cd "$RUNNER_TEMP"
+          npm pack "git+file://$GITHUB_WORKSPACE#$(git -C "$GITHUB_WORKSPACE" rev-parse HEAD)"
+          npm install -g --prefix "$RUNNER_TEMP/agent-undo-git" ./agent-undo-0.1.0.tgz
           "$RUNNER_TEMP/agent-undo-git/bin/agent-undo" --help

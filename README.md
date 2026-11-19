@@ -11,7 +11,8 @@ Requires Node.js 18+ and Git 2.31+. From the private GitHub repository, with Git
 access configured:
 
 ```sh
-npm install -g github:agokun20-art/agent-undo
+npm pack github:agokun20-art/agent-undo
+npm install -g ./agent-undo-0.1.0.tgz
 ```
 
 Or clone it with your authorized Git URL, then pack and install:
@@ -57,9 +58,9 @@ Codex hook was also tested end to end using Codex CLI 0.170.0 with a local
 model fixture. Use a current agent version with the listed event available.
 Follow the agent's project and hook trust prompts; in Codex, review the hook
 definition with `/hooks`. Start Gemini CLI from the repository root so it loads
-the workspace settings. Use `agent-undo uninstall <agent>` to remove only this hook. If you
-run an agent in a container or remote workspace, install the binary and
-configure the hook in that environment too.
+the workspace settings. Use `agent-undo uninstall <agent>` to remove only this
+hook. If you run an agent in a container or remote workspace, install the binary
+and configure the hook in that environment too.
 
 ## Commands
 
