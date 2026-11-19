@@ -4,6 +4,7 @@
     "module": "NodeNext",
     "rootDir": "src",
     "outDir": "dist",
+    "newLine": "lf",
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,

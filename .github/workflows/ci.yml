@@ -22,8 +22,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
+      - name: Test and verify compiled files
+        run: |
+          rm -r dist
+          npm test
+          changes="$(git status --short -- dist)"
+          printf '%s\n' "$changes"
+          test -z "$changes"
       - name: Install and run packed CLI
         shell: bash
         run: |
@@ -43,7 +48,5 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.node == 22
         shell: bash
         run: |
-          cd "$RUNNER_TEMP"
-          npm pack "git+file://$GITHUB_WORKSPACE#$(git -C "$GITHUB_WORKSPACE" rev-parse HEAD)"
-          npm install -g --prefix "$RUNNER_TEMP/agent-undo-git" ./agent-undo-0.1.0.tgz
+          npm install -g --prefix "$RUNNER_TEMP/agent-undo-git" "git+file://$GITHUB_WORKSPACE#$(git rev-parse HEAD)"
           "$RUNNER_TEMP/agent-undo-git/bin/agent-undo" --help

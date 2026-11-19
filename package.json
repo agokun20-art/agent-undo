@@ -12,10 +12,9 @@
   "files": ["dist", "CHANGELOG.md"],
   "engines": { "node": ">=18" },
   "scripts": {
-    "build": "tsc",
-    "prepare": "npm run build",
+    "compile": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "npm run build && node --test"
+    "test": "npm run compile && node --test"
   },
   "devDependencies": {
     "@types/node": "^18.19.0",

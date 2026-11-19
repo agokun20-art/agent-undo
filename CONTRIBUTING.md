@@ -7,7 +7,9 @@ npm test
 ```
 
 The CLI uses Node's standard library and calls Git directly. Tests use Node's
-test runner and isolated repositories.
+test runner and isolated repositories. Run `npm run compile` and commit any
+resulting `dist/` changes with the TypeScript sources. The precompiled CLI
+lets npm install directly from Git without running a build during installation.
 
 To add an agent:
 

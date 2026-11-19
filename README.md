@@ -11,15 +11,13 @@ Requires Node.js 18+ and Git 2.31+. From the private GitHub repository, with Git
 access configured:
 
 ```sh
-npm pack github:agokun20-art/agent-undo
-npm install -g ./agent-undo-0.1.0.tgz
+npm install -g github:agokun20-art/agent-undo
 ```
 
 Or clone it with your authorized Git URL, then pack and install:
 
 ```sh
 cd agent-undo
-npm ci
 npm pack
 npm install -g ./agent-undo-0.1.0.tgz
 ```
