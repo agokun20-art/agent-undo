@@ -22,7 +22,7 @@ function readConfig(file) {
 function writeConfig(file, config, mode = 0o600) {
     const parent = dirname(file);
     mkdirSync(parent, { recursive: true });
-    const dir = mkdtempSync(join(parent, '.agent-undo-'));
+    const dir = mkdtempSync(join(parent, '.undoturn-'));
     const temp = join(dir, 'config.json');
     try {
         writeFileSync(temp, `${JSON.stringify(config, null, 2)}\n`, { mode });
@@ -33,7 +33,7 @@ function writeConfig(file, config, mode = 0o600) {
     }
 }
 export function projectHook(spec) {
-    const command = `agent-undo checkpoint --hook ${spec.name}`;
+    const command = `undoturn checkpoint --hook ${spec.name}`;
     const grouped = spec.layout === 'grouped';
     const match = (hook) => isObject(hook) && hook.command === command &&
         (grouped ? hook.type === 'command' : hook.type === undefined || hook.type === 'command');
@@ -77,7 +77,7 @@ export function projectHook(spec) {
             const { config, mode } = readConfig(file);
             const { hooks, rows } = rowsAt(config, file);
             if (!installed(rows))
-                return `No agent-undo hook in ${spec.file}.`;
+                return `No undoturn hook in ${spec.file}.`;
             const remaining = grouped ? rows.flatMap((row) => {
                 if (!isObject(row) || !Array.isArray(row.hooks) || !row.hooks.some(match))
                     return [row];
@@ -90,7 +90,7 @@ export function projectHook(spec) {
                 delete hooks[spec.event];
             config.hooks = hooks;
             writeConfig(file, config, mode);
-            return `Removed agent-undo hook from ${spec.file}.`;
+            return `Removed undoturn hook from ${spec.file}.`;
         },
     };
 }

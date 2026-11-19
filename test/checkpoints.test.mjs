@@ -10,7 +10,7 @@ const cli = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
 const options = { encoding: 'utf8', env: { ...process.env, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: process.platform === 'win32' ? 'NUL' : '/dev/null' } };
 
 function fixture(t) {
-  const cwd = mkdtempSync(join(tmpdir(), 'agent-undo-test-'));
+  const cwd = mkdtempSync(join(tmpdir(), 'undoturn-test-'));
   t.after(() => rmSync(cwd, { recursive: true, force: true }));
   const git = (...args) => execFileSync('git', args, { ...options, cwd }).trim();
   const undo = (...args) => execFileSync(process.execPath, [cli, ...args], { ...options, cwd }).trim();
@@ -45,6 +45,8 @@ test('undo and redo restore the full working tree without changing HEAD, index o
   const refs = git('for-each-ref', 'refs/heads', 'refs/stash');
 
   assert.match(undo('checkpoint', '-m', 'before turn'), /^Checkpoint [a-f0-9]+$/);
+  assert.match(git('show', '-s', '--format=%an <%ae> %s', 'refs/worktree/undoturn/checkpoints'),
+    /^undoturn <undoturn@localhost> before turn$/);
   assert.equal(undo('checkpoint'), 'Working tree unchanged; no new checkpoint.');
   put('tracked', 'after');
   rmSync(file('deleted'));

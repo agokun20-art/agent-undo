@@ -2,12 +2,12 @@ import { spawnSync } from 'node:child_process';
 import { closeSync, mkdtempSync, openSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-const namespace = 'refs/worktree/agent-undo';
+const namespace = 'refs/worktree/undoturn';
 const checkpoints = `${namespace}/checkpoints`;
 const redoStack = `${namespace}/redo`;
 const safety = `${namespace}/safety`;
-const identity = { GIT_AUTHOR_NAME: 'agent-undo', GIT_AUTHOR_EMAIL: 'agent-undo@localhost',
-    GIT_COMMITTER_NAME: 'agent-undo', GIT_COMMITTER_EMAIL: 'agent-undo@localhost' };
+const identity = { GIT_AUTHOR_NAME: 'undoturn', GIT_AUTHOR_EMAIL: 'undoturn@localhost',
+    GIT_COMMITTER_NAME: 'undoturn', GIT_COMMITTER_EMAIL: 'undoturn@localhost' };
 function run(cwd, args, options = {}, deadline) {
     const remaining = deadline === undefined ? undefined : deadline - Date.now();
     if (remaining !== undefined && remaining <= 0)
@@ -42,7 +42,7 @@ export class Repo {
         return this.value(['rev-parse', '--verify', '--quiet', name], { missing: true }) || undefined;
     }
     withIndex(fn) {
-        const dir = mkdtempSync(join(tmpdir(), 'agent-undo-'));
+        const dir = mkdtempSync(join(tmpdir(), 'undoturn-'));
         try {
             return fn({ GIT_INDEX_FILE: join(dir, 'index') });
         }
@@ -51,7 +51,7 @@ export class Repo {
         }
     }
     locked(fn) {
-        const lock = this.git(['rev-parse', '--path-format=absolute', '--git-path', 'agent-undo.lock'])
+        const lock = this.git(['rev-parse', '--path-format=absolute', '--git-path', 'undoturn.lock'])
             .toString().replace(/\r?\n$/, '');
         let fd;
         try {
@@ -59,7 +59,7 @@ export class Repo {
         }
         catch (error) {
             if (error.code === 'EEXIST') {
-                throw new Error(`Another agent-undo operation holds ${lock}; remove it only if no operation is running.`);
+                throw new Error(`Another undoturn operation holds ${lock}; remove it only if no operation is running.`);
             }
             throw error;
         }
@@ -114,7 +114,7 @@ export class Repo {
     }
     resolveCheckpoint(id) {
         if (!/^[a-f0-9]{4,64}$/i.test(id))
-            throw new Error('Use a checkpoint ID from agent-undo list.');
+            throw new Error('Use a checkpoint ID from undoturn list.');
         const matches = this.history().filter((hash) => hash.startsWith(id.toLowerCase()));
         if (matches.length !== 1)
             throw new Error(`Unknown or ambiguous checkpoint: ${id}`);
@@ -161,7 +161,7 @@ export class Repo {
             const history = this.history();
             const latest = history[0];
             if (!latest)
-                throw new Error('No checkpoints. Run agent-undo checkpoint first.');
+                throw new Error('No checkpoints. Run undoturn checkpoint first.');
             const current = this.snapshot();
             const target = history[count - (current === this.tree(latest) ? 0 : 1)];
             if (!target)
@@ -198,7 +198,7 @@ export class Repo {
     diff(id) {
         const target = id ? this.resolveCheckpoint(id) : this.ref(checkpoints);
         if (!target)
-            throw new Error('No checkpoints. Run agent-undo checkpoint first.');
+            throw new Error('No checkpoints. Run undoturn checkpoint first.');
         return this.git(['diff', '--binary', '--no-color', '--no-ext-diff', '--no-textconv',
             this.tree(target), this.snapshot(), '--']);
     }

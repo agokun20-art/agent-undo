@@ -2,7 +2,7 @@
 import { isAbsolute } from 'node:path';
 import { agents } from './agents/index.js';
 import { Repo } from './git.js';
-const help = `Usage: agent-undo <command>
+const help = `Usage: undoturn <command>
 
   checkpoint [-m message]   Save the current working tree
   undo [n]                  Restore the previous working state (n defaults to 1)
@@ -11,7 +11,7 @@ const help = `Usage: agent-undo <command>
   diff [id]                 Compare the working tree with a checkpoint
   restore <id>              Restore a checkpoint, saving the current working tree
   install <agent>           Add a project hook
-  uninstall <agent>         Remove only the agent-undo project hook
+  uninstall <agent>         Remove only the undoturn project hook
   status | doctor           Show repository and hook status
 
 Agents: ${Object.keys(agents).join(', ')}
@@ -62,7 +62,7 @@ async function main([command, ...args]) {
     switch (command) {
         case 'checkpoint': {
             if (args.length && (args.length !== 2 || args[0] !== '-m')) {
-                throw new Error('Usage: agent-undo checkpoint [-m message]');
+                throw new Error('Usage: undoturn checkpoint [-m message]');
             }
             const id = repo.checkpoint(args[1] ?? 'Manual checkpoint');
             console.log(id ? `Checkpoint ${id}` : 'Working tree unchanged; no new checkpoint.');
@@ -71,30 +71,30 @@ async function main([command, ...args]) {
         case 'undo': {
             const count = Number(args[0] ?? '1');
             if (args.length > 1 || !/^\d+$/.test(args[0] ?? '1') || !Number.isSafeInteger(count) || count < 1) {
-                throw new Error('Usage: agent-undo undo [positive integer]');
+                throw new Error('Usage: undoturn undo [positive integer]');
             }
-            console.log(`Restored checkpoint ${repo.undo(count)}. Run agent-undo redo to reverse it.`);
+            console.log(`Restored checkpoint ${repo.undo(count)}. Run undoturn redo to reverse it.`);
             break;
         }
         case 'redo':
             if (args.length)
-                throw new Error('Usage: agent-undo redo');
+                throw new Error('Usage: undoturn redo');
             console.log(`Restored saved working tree ${repo.redo()}.`);
             break;
         case 'restore':
             if (args.length !== 1)
-                throw new Error('Usage: agent-undo restore <id>');
-            console.log(`Restored checkpoint ${repo.restore(args[0])}. Run agent-undo redo to reverse it.`);
+                throw new Error('Usage: undoturn restore <id>');
+            console.log(`Restored checkpoint ${repo.restore(args[0])}. Run undoturn redo to reverse it.`);
             break;
         case 'list':
         case 'log':
             if (args.length)
-                throw new Error(`Usage: agent-undo ${command}`);
+                throw new Error(`Usage: undoturn ${command}`);
             process.stdout.write(repo.list() || 'No checkpoints.\n');
             break;
         case 'diff':
             if (args.length > 1)
-                throw new Error('Usage: agent-undo diff [id]');
+                throw new Error('Usage: undoturn diff [id]');
             process.stdout.write(repo.diff(args[0]));
             break;
         case 'install':
@@ -102,7 +102,7 @@ async function main([command, ...args]) {
             const name = args[0];
             const agent = name && Object.hasOwn(agents, name) ? agents[name] : undefined;
             if (args.length !== 1 || !agent) {
-                throw new Error(`Usage: agent-undo ${command} <${Object.keys(agents).join('|')}>`);
+                throw new Error(`Usage: undoturn ${command} <${Object.keys(agents).join('|')}>`);
             }
             console.log(agent[command](repo.root));
             break;
@@ -110,7 +110,7 @@ async function main([command, ...args]) {
         case 'status':
         case 'doctor':
             if (args.length)
-                throw new Error(`Usage: agent-undo ${command}`);
+                throw new Error(`Usage: undoturn ${command}`);
             console.log(repo.status());
             if (command === 'doctor') {
                 for (const agent of Object.values(agents)) {
@@ -124,10 +124,10 @@ async function main([command, ...args]) {
             }
             break;
         default:
-            throw new Error(`Unknown command: ${command}. Run agent-undo --help.`);
+            throw new Error(`Unknown command: ${command}. Run undoturn --help.`);
     }
 }
 main(process.argv.slice(2)).catch((error) => {
-    console.error(`agent-undo: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(`undoturn: ${error instanceof Error ? error.message : String(error)}`);
     process.exitCode = 1;
 });

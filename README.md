@@ -1,4 +1,4 @@
-# agent-undo
+# undoturn
 
 Undo a coding agent's edits without a Git commit, including files the agent
 created or deleted. Each supported agent's prompt hook captures the work you
@@ -10,35 +10,33 @@ already have before the agent starts. Inspired by the request to
 Requires Node.js 18+ and Git 2.31+. Install directly from GitHub:
 
 ```sh
-npm install -g github:agokun20-art/agent-undo
+npm install -g github:agokun20-art/undoturn
 ```
 
 Or clone the repository, then pack and install:
 
 ```sh
-cd agent-undo
+cd undoturn
 npm pack
-npm install -g ./agent-undo-0.1.0.tgz
+npm install -g ./undoturn-0.1.0.tgz
 ```
-
-`aundo` is an alias for `agent-undo`.
 
 ## Quick start
 
 In a Git repository, install the matching project hook and start or restart
-your agent. Make sure `agent-undo` is on its `PATH`.
+your agent. Make sure `undoturn` is on its `PATH`.
 
 ```sh
-agent-undo install codex
-agent-undo doctor
+undoturn install codex
+undoturn doctor
 # Review and trust the hook in Codex with /hooks, then send a prompt.
-agent-undo list
-agent-undo diff     # Preview what changed since the latest checkpoint
-agent-undo undo
-agent-undo redo     # Bring the undone edits back
+undoturn list
+undoturn diff     # Preview what changed since the latest checkpoint
+undoturn undo
+undoturn redo     # Bring the undone edits back
 ```
 
-You can also run `agent-undo checkpoint -m "before changes"` manually before
+You can also run `undoturn checkpoint -m "before changes"` manually before
 using another agent or editing files yourself. No initial Git commit is needed.
 
 ## Agent setup
@@ -55,7 +53,7 @@ Codex hook was also tested end to end using Codex CLI 0.170.0 with a local
 model fixture. Use a current agent version with the listed event available.
 Follow the agent's project and hook trust prompts; in Codex, review the hook
 definition with `/hooks`. Start Gemini CLI from the repository root so it loads
-the workspace settings. Use `agent-undo uninstall <agent>` to remove only this
+the workspace settings. Use `undoturn uninstall <agent>` to remove only this
 hook. If you run an agent in a container or remote workspace, install the binary
 and configure the hook in that environment too.
 
@@ -75,7 +73,7 @@ and configure the hook in that environment too.
 ## What it saves
 
 Git builds a tree in a temporary index, then records it as a commit under
-private, per-worktree refs in `refs/worktree/agent-undo/`. Checkpoints leave
+private, per-worktree refs in `refs/worktree/undoturn/`. Checkpoints leave
 your real index, HEAD, branches, and stash unchanged. Undo changes the working
 tree, not what you have staged. Checkpoints include tracked and non-ignored
 untracked files; ignored untracked files are left alone. Empty directories
