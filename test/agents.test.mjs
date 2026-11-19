@@ -17,7 +17,7 @@ const cases = [
 
 for (const [name, path, event, timeout] of cases) {
   test(`${name} merges, detects, idempotently installs and narrowly uninstalls`, (t) => {
-    const root = mkdtempSync(join(tmpdir(), 'agent-undo-hook-'));
+    const root = mkdtempSync(join(tmpdir(), 'undoturn-hook-'));
     t.after(() => rmSync(root, { recursive: true, force: true }));
     const file = join(root, path);
     const agent = agents[name];
@@ -32,7 +32,7 @@ for (const [name, path, event, timeout] of cases) {
     assert.match(agent.install(root), /Installed/);
     assert.equal(agent.detect(root), true);
     const installed = readFileSync(file, 'utf8');
-    const command = `agent-undo checkpoint --hook ${name}`;
+    const command = `undoturn checkpoint --hook ${name}`;
     const row = grouped ? { hooks: [{ type: 'command', command, timeout }] } : { command, timeout };
     assert.deepEqual(JSON.parse(installed), {
       ...original,
@@ -43,7 +43,7 @@ for (const [name, path, event, timeout] of cases) {
     agent.uninstall(root);
     assert.equal(agent.detect(root), false);
     assert.deepEqual(JSON.parse(readFileSync(file, 'utf8')), original);
-    assert.match(agent.uninstall(root), /No agent-undo hook/);
+    assert.match(agent.uninstall(root), /No undoturn hook/);
     writeFileSync(file, '{malformed');
     assert.throws(() => agent.install(root), /Cannot read/);
     assert.equal(readFileSync(file, 'utf8'), '{malformed');
@@ -51,7 +51,7 @@ for (const [name, path, event, timeout] of cases) {
 }
 
 test('hook reads cwd from stdin and stays successful on invalid payload/repo', (t) => {
-  const root = mkdtempSync(join(tmpdir(), 'agent-undo-payload-'));
+  const root = mkdtempSync(join(tmpdir(), 'undoturn-payload-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const cwd = join(root, 'repo');
   mkdirSync(cwd);

@@ -33,20 +33,20 @@ jobs:
         shell: bash
         run: |
           npm pack
-          npm install -g --prefix "$RUNNER_TEMP/agent-undo-install" ./agent-undo-0.1.0.tgz
-          export PATH="$RUNNER_TEMP/agent-undo-install/bin:$PATH"
-          agent-undo --help
-          mkdir "$RUNNER_TEMP/agent-undo-smoke"
-          cd "$RUNNER_TEMP/agent-undo-smoke"
+          npm install -g --prefix "$RUNNER_TEMP/undoturn-install" ./undoturn-0.1.0.tgz
+          export PATH="$RUNNER_TEMP/undoturn-install/bin:$PATH"
+          undoturn --help
+          mkdir "$RUNNER_TEMP/undoturn-smoke"
+          cd "$RUNNER_TEMP/undoturn-smoke"
           git init -q
           printf 'before\n' > example.txt
-          aundo checkpoint
+          undoturn checkpoint
           printf 'after\n' > example.txt
-          agent-undo undo
+          undoturn undo
           test "$(cat example.txt)" = before
       - name: Install from Git
         if: matrix.os == 'ubuntu-latest' && matrix.node == 22
         shell: bash
         run: |
-          npm install -g --prefix "$RUNNER_TEMP/agent-undo-git" "git+file://$GITHUB_WORKSPACE#$(git rev-parse HEAD)"
-          "$RUNNER_TEMP/agent-undo-git/bin/agent-undo" --help
+          npm install -g --prefix "$RUNNER_TEMP/undoturn-git" "git+file://$GITHUB_WORKSPACE#$(git rev-parse HEAD)"
+          "$RUNNER_TEMP/undoturn-git/bin/undoturn" --help

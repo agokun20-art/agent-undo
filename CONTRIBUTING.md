@@ -17,7 +17,7 @@ To add an agent:
 2. Add a module in `src/agents/` that implements the `Agent` interface. If its
    config uses an existing JSON layout, use the `projectHook` factory.
 3. Register the module in `src/agents/index.ts`. Have the hook run
-   `agent-undo checkpoint --hook <agent>` and add any agent-specific response
+   `undoturn checkpoint --hook <agent>` and add any agent-specific response
    handling its documented protocol requires.
 4. Test install, merge, repeat install, and uninstall in
    `test/agents.test.mjs`. Add the setup and official docs link to the README.

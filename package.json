@@ -1,13 +1,18 @@
 {
-  "name": "agent-undo",
+  "name": "undoturn",
   "version": "0.1.0",
   "description": "Local Git working-tree undo for AI coding agents",
   "license": "MIT",
-  "repository": "github:agokun20-art/agent-undo",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agokun20-art/undoturn.git"
+  },
+  "homepage": "https://github.com/agokun20-art/undoturn#readme",
+  "bugs": { "url": "https://github.com/agokun20-art/undoturn/issues" },
+  "keywords": ["git", "undo", "checkpoint", "coding-agents", "cli"],
   "type": "module",
   "bin": {
-    "agent-undo": "dist/cli.js",
-    "aundo": "dist/cli.js"
+    "undoturn": "dist/cli.js"
   },
   "files": ["dist", "CHANGELOG.md"],
   "engines": { "node": ">=18" },
