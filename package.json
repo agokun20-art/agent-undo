@@ -1,0 +1,23 @@
+{
+  "name": "agent-undo",
+  "version": "0.1.0",
+  "description": "Local Git working-tree undo for AI coding agents",
+  "license": "MIT",
+  "repository": "github:agokun20-art/agent-undo",
+  "type": "module",
+  "bin": {
+    "agent-undo": "dist/cli.js",
+    "aundo": "dist/cli.js"
+  },
+  "files": ["dist", "CHANGELOG.md"],
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "compile": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run compile && node --test"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "typescript": "^5.9.3"
+  }
+}
