@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [18, 20, 22]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Install and run packed CLI
+        shell: bash
+        run: |
+          npm pack
+          npm install -g --prefix "$RUNNER_TEMP/agent-undo-install" ./agent-undo-0.1.0.tgz
+          export PATH="$RUNNER_TEMP/agent-undo-install/bin:$PATH"
+          agent-undo --help
+          mkdir "$RUNNER_TEMP/agent-undo-smoke"
+          cd "$RUNNER_TEMP/agent-undo-smoke"
+          git init -q
+          printf 'before\n' > example.txt
+          aundo checkpoint
+          printf 'after\n' > example.txt
+          agent-undo undo
+          test "$(cat example.txt)" = before
+      - name: Install from Git
+        if: matrix.os == 'ubuntu-latest' && matrix.node == 22
+        shell: bash
+        run: |
+          npm install -g --prefix "$RUNNER_TEMP/agent-undo-git" "git+file://$GITHUB_WORKSPACE#$(git rev-parse HEAD)"
+          "$RUNNER_TEMP/agent-undo-git/bin/agent-undo" --help
