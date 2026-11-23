@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { isAbsolute } from 'node:path';
 import { agents } from './agents/index.js';
-import { Repo } from './git.js';
+import { Repo, retention } from './git.js';
 
 const help = `Usage: undoturn <command>
 
@@ -11,6 +11,8 @@ const help = `Usage: undoturn <command>
   list | log                List checkpoints on the current timeline
   diff [id]                 Compare the working tree with a checkpoint
   restore <id>              Restore a checkpoint, saving the current working tree
+  prune [--keep n] [--dry-run]
+                            Remove older checkpoints (default: keep 100)
   install <agent>           Add a project hook
   uninstall <agent>         Remove only the undoturn project hook
   status | doctor           Show repository and hook status
@@ -83,6 +85,22 @@ async function main([command, ...args]: string[]): Promise<void> {
       if (args.length !== 1) throw new Error('Usage: undoturn restore <id>');
       console.log(`Restored checkpoint ${repo.restore(args[0]!)}. Run undoturn redo to reverse it.`);
       break;
+    case 'prune': {
+      let keep: string | undefined;
+      let dryRun = false;
+      for (let i = 0; i < args.length; i++) {
+        if (args[i] === '--keep' && keep === undefined && args[i + 1] !== undefined) {
+          keep = args[++i];
+        } else if (args[i] === '--dry-run' && !dryRun) {
+          dryRun = true;
+        } else {
+          throw new Error('Usage: undoturn prune [--keep n] [--dry-run]');
+        }
+      }
+      const { removed, retained } = repo.prune(retention(keep), dryRun);
+      console.log(`${dryRun ? 'Would prune' : 'Pruned'} ${removed} checkpoint(s); ${retained} retained.`);
+      break;
+    }
     case 'list':
     case 'log':
       if (args.length) throw new Error(`Usage: undoturn ${command}`);

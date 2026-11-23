@@ -68,6 +68,7 @@ and configure the hook in that environment too.
 | `list` / `log` | List checkpoint IDs on the current timeline, newest first. |
 | `diff [id]` | Compare the current working tree with a checkpoint (default: latest). |
 | `restore <id>` | Restore a checkpoint from `list`; the pre-restore state is available through `redo`. |
+| `prune [--keep n] [--dry-run]` | Remove older checkpoints, or preview how many would be removed. |
 | `install <agent>` / `uninstall <agent>` | Add or remove a project hook without replacing other hooks. |
 | `status` / `doctor` | Show the latest checkpoint and redo availability; `doctor` also checks hook configuration. |
 
@@ -89,9 +90,26 @@ to confirm a hook ran and `checkpoint` to show any snapshot errors.
 
 Snapshots remain in the local Git object database. They are not part of a
 normal branch push, but may contain sensitive files that were not ignored
-or are already tracked. Checkpoint history is not automatically pruned in
-v0.1. Sparse checkouts, submodules, and embedded Git repositories are not
-supported.
+or are already tracked. Sparse checkouts, submodules, and embedded Git
+repositories are not supported.
+
+## Checkpoint retention
+
+After saving a new checkpoint, undoturn tries to keep the newest 100. Set
+`UNDOTURN_KEEP` in the environment that runs undoturn (including the agent's
+environment) to change the limit. It accepts integers from 1 to 10,000.
+Run `undoturn prune` to apply the same limit manually, or override it:
+
+```sh
+undoturn prune --keep 20 --dry-run
+undoturn prune --keep 20
+```
+
+Pruning preserves the current checkpoint and pending redo steps, even if that
+means keeping more than requested. When history is shortened, retained
+checkpoint IDs change; run `undoturn list` again before restoring by ID.
+Pruning releases old checkpoints for Git's normal garbage collection. It
+does not run garbage collection or delete shared file content on demand.
 
 ## Contributing
 

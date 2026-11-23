@@ -8,6 +8,8 @@ import test from 'node:test';
 
 const cli = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
 const options = { encoding: 'utf8', env: { ...process.env, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: process.platform === 'win32' ? 'NUL' : '/dev/null' } };
+delete options.env.UNDOTURN_KEEP;
+const checkpointRef = 'refs/worktree/undoturn/checkpoints';
 
 function fixture(t) {
   const cwd = mkdtempSync(join(tmpdir(), 'undoturn-test-'));
@@ -137,4 +139,89 @@ test('linked worktrees have independent histories', (t) => {
   other('checkpoint', '-m', 'linked checkpoint');
   assert.match(other('list'), /linked checkpoint/);
   assert.match(undo('list'), /main checkpoint/);
+});
+
+test('recording a checkpoint automatically retains the newest 100', (t) => {
+  const { git, undo, put } = fixture(t);
+  const tree = git('write-tree');
+  let tip;
+  let oldest;
+  for (let i = 1; i <= 100; i++) {
+    tip = git('commit-tree', tree, ...(tip ? ['-p', tip] : []), '-m', `checkpoint ${i}`);
+    oldest ??= tip;
+  }
+  git('update-ref', checkpointRef, tip);
+  put('file', 'new snapshot');
+  const saved = undo('checkpoint').split(' ')[1];
+  const timeline = undo('list').split('\n');
+  assert.equal(timeline.length, 100);
+  assert.match(timeline.at(-1), /checkpoint 2$/);
+  assert.equal(git('rev-parse', checkpointRef), saved);
+  assert.match(git('fsck', '--unreachable', '--no-progress'), new RegExp(`unreachable commit ${oldest}`));
+});
+
+test('manual prune previews changes, honors the keep override, and expires only its own reflogs', (t) => {
+  const { git, undo, fails, put, read } = fixture(t);
+  git('commit', '-qm', 'initial', '--allow-empty');
+  git('commit', '-qm', 'second', '--allow-empty');
+  put('file', 'first');
+  const oldest = undo('checkpoint', '-m', 'first').split(' ')[1];
+  put('file', 'second');
+  const second = undo('checkpoint', '-m', 'second').split(' ')[1];
+  git('update-ref', '--create-reflog', checkpointRef, oldest);
+  git('update-ref', checkpointRef, second);
+  put('file', 'third');
+  undo('checkpoint', '-m', 'third');
+  const before = undo('list');
+  const reflog = git('reflog', 'show', checkpointRef);
+  const headLog = git('reflog', 'show', 'HEAD');
+  assert.ok(reflog);
+  assert.match(fails('prune', '--keep', '0').stderr, /retention must be an integer/);
+  assert.equal(undo('prune', '--dry-run', '--keep', '2'), 'Would prune 1 checkpoint(s); 2 retained.');
+  assert.equal(undo('list'), before);
+  assert.equal(git('reflog', 'show', checkpointRef), reflog);
+
+  assert.equal(undo('prune', '--keep', '2'), 'Pruned 1 checkpoint(s); 2 retained.');
+  assert.equal(undo('prune', '--keep', '2'), 'Pruned 0 checkpoint(s); 2 retained.');
+  assert.equal(read('file'), 'third');
+  assert.deepEqual(undo('list').split('\n').map((line) => line.split(' ').at(-1)), ['third', 'second']);
+  assert.equal(git('reflog', 'show', checkpointRef), '');
+  assert.equal(git('reflog', 'show', 'HEAD'), headLog);
+  assert.match(git('fsck', '--unreachable', '--no-progress'), new RegExp(`unreachable commit ${oldest}`));
+  assert.match(fails('restore', oldest).stderr, /Unknown or ambiguous checkpoint/);
+});
+
+test('configured retention applies to hooks, and redo survives pruning at an older position', (t) => {
+  const { cwd, git, undo, put, read } = fixture(t);
+  for (const value of ['one', 'two', 'three', 'four', 'five']) {
+    put('file', value);
+    undo('checkpoint', '-m', value);
+  }
+  const oldest = git('rev-list', '--max-parents=0', checkpointRef);
+  put('file', 'six');
+  undo('undo');
+  undo('undo');
+  undo('undo');
+  assert.equal(read('file'), 'three');
+  assert.equal(undo('prune', '--keep', '2'), 'Pruned 2 checkpoint(s); 3 retained.');
+  assert.match(git('fsck', '--unreachable', '--no-progress'), new RegExp(`unreachable commit ${oldest}`));
+  assert.equal(git('show', '-s', '--format=%P', 'refs/worktree/undoturn/safety'), '');
+  assert.match(undo('list'), /three$/);
+  for (const value of ['four', 'five', 'six']) {
+    undo('redo');
+    assert.equal(read('file'), value);
+  }
+  undo('undo', '2');
+  assert.equal(read('file'), 'four');
+  undo('redo');
+  assert.equal(read('file'), 'six');
+
+  const configured = (keep, ...args) => execFileSync(process.execPath, [cli, ...args],
+    { ...options, cwd, env: { ...options.env, UNDOTURN_KEEP: keep }, input: '{}' }).trim();
+  assert.equal(configured('bad', 'checkpoint', '--hook', 'codex'), '{}');
+  assert.match(undo('list'), /Before codex turn/);
+  assert.equal(configured('2', 'prune', '--dry-run'), 'Would prune 2 checkpoint(s); 2 retained.');
+  put('file', 'seven');
+  assert.equal(configured('2', 'checkpoint', '--hook', 'codex'), '{}');
+  assert.equal(undo('list').split('\n').length, 2);
 });
